@@ -3,13 +3,13 @@
 # DIY扩展二合一了，在此处可以增加插件
 # 自行拉取插件之前请SSH连接进入固件配置里面确认过没有你要的插件再单独拉取你需要的插件
 # 不要一下就拉取别人一个插件包N多插件的，多了没用，增加编译错误，自己需要的才好
-src-include defaults feeds.conf.default
-src-git third_party https://github.com/linkease/istore-packages.git;main
-src-git diskman https://github.com/jjm2473/luci-app-diskman.git;dev
-#src-git oaf https://github.com/jjm2473/OpenAppFilter.git;dev4
-src-git linkease_nas https://github.com/linkease/nas-packages.git;master
-src-git linkease_nas_luci https://github.com/linkease/nas-packages-luci.git;main
-src-git jjm2473_apps https://github.com/jjm2473/openwrt-apps.git;main
+
+git clone https://github.com/linkease/istore-packages package/istore-packages
+git clone -b dev https://github.com/jjm2473/luci-app-diskman package/luci-app-diskman
+#git clone -b dev4 https://github.com/jjm2473/OpenAppFilter package/
+git clone https://github.com/linkease/nas-packages package/nas-packages
+git clone https://github.com/linkease/nas-packages-luci package/nas-packages-luci
+git clone https://github.com/jjm2473/openwrt-apps package/openwrt-apps
 
 # 后台IP设置
 #export Ipv4_ipaddr="192.168.2.2"            # 修改openwrt后台地址(填0为关闭)
