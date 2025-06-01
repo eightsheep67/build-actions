@@ -5,7 +5,6 @@
 # 不要一下就拉取别人一个插件包N多插件的，多了没用，增加编译错误，自己需要的才好
 git clone https://github.com/brvphoenix/luci-app-wrtbwmon package/luci-app-wrtbwmon
 git clone https://github.com/tty228/luci-app-wechatpush package/luci-app-wechatpush
-git clone https://github.com/brvphoenix/wrtbwmon package/wrtbwmon
 
 
 # 后台IP设置
