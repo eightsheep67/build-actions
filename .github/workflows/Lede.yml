@@ -9,6 +9,10 @@
 #
 #
 
+#
+# GitHub Actions 优化版 - 解决 Node.js 24 警告与语法错误
+#
+
 name: Lede-大雕
 on:
   workflow_dispatch:
@@ -79,12 +83,6 @@ on:
         default: 'true'
         type: boolean
 
-
-# 如若启动定时编译的话,配置文件是设置对应文件夹内的settings.ini文件
-# 定时触发开启开始编译(把下面两个#去掉开启,时间设置请看定时开启编译说明)
-#  schedule:
-#   - cron: 35 18 * * *
-
 env:
   GIT_REPOSITORY: ${{github.repository}}
   REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
@@ -92,11 +90,14 @@ env:
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
   TZ: Asia/Shanghai
+  # [新增] 强制使用 Node.js 24 以消除 Deprecation 警告
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     name: 启动"${{ matrix.target }}-${{ github.event.inputs.REPO_BRANCH }}"触发编译
     runs-on: ubuntu-22.04
+    # [修复] 修正 if 语法警告：将整个逻辑表达式包裹在单个 ${{ }} 内
     if: ${{ github.event.repository.owner.id == github.event.sender.id }}
 
     env:
@@ -106,10 +107,8 @@ jobs:
       matrix:
         target: [Lede]
         
-        # 请勿对 target: [Lede] 做任何修改
-        
     steps:
-    - name: 准备结束
+    - name: 准备开始
       uses: actions/checkout@v4
       
     - name: 检测密匙/文件/版本
@@ -122,6 +121,7 @@ jobs:
         sudo -E apt-get -qq update -y
         sudo -E apt-get -qq install -y gawk git gettext libssl-dev xsltproc zip git-core wget curl grep python2.7 python3 python3-pip libpython3-dev
         sudo timedatectl set-timezone "$TZ"
+        # 确保 DIY_WORK 变量已通过 upstream action 定义，否则此处可能报错
         sudo mkdir -p /${{ env.DIY_WORK }}
         sudo chown $USER:$GROUPS /${{ env.DIY_WORK }}
     
@@ -143,7 +143,7 @@ jobs:
         
     - name: 编译信息
       continue-on-error: true
-      if: env.COMPILATION_INFORMATION == 'true'
+      if: ${{ env.COMPILATION_INFORMATION == 'true' }}
       uses: 281677160/common@message
     
     - name: 清理releases和workflows
@@ -163,5 +163,5 @@ jobs:
         gh_token: ${{ secrets.REPO_TOKEN }}
         
     - name: 触发启动"${{ matrix.target }}"开始编译
-      if: steps.info.outcome == 'success'
+      if: ${{ steps.info.outcome == 'success' }}
       uses: 281677160/common@trigger
