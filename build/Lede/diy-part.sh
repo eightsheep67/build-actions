@@ -94,3 +94,31 @@ EOF
 # 在线更新时，删除不想保留固件的某个文件，在EOF跟EOF之间加入删除代码，记住这里对应的是固件的文件路径，比如： rm -rf /etc/config/luci
 cat >>$DELETE <<-EOF
 EOF
+
+# 1. 替换旧版 miniupnpd 为官方 nftables 版本
+# 先删除 Lede 自带的旧版
+rm -rf feeds/packages/net/miniupnpd
+# 从官方库拉取最新版本（自带 nftables 支持）
+git clone --depth=1 https://github.com/openwrt/packages /tmp/packages
+cp -r /tmp/packages/net/miniupnpd feeds/packages/net/miniupnpd
+rm -rf /tmp/packages
+
+# 2. 强制修正 .config 配置 (一劳永逸)
+# 禁用旧版，启用新版 nft 驱动
+sed -i 's/CONFIG_PACKAGE_miniupnpd=y/# CONFIG_PACKAGE_miniupnpd is not set/g' .config
+echo "CONFIG_PACKAGE_miniupnpd-nftables=y" >> .config
+echo "CONFIG_PACKAGE_luci-app-upnp=y" >> .config
+echo "CONFIG_PACKAGE_luci-i18n-upnp-zh-cn=y" >> .config
+
+# 3. 性能与安全优化插件
+# 开启 TCP BBR 加速
+echo "CONFIG_PACKAGE_kmod-tcp-bbr=y" >> .config
+# 开启多核中断均衡 (irqbalance)
+echo "CONFIG_PACKAGE_irqbalance=y" >> .config
+# 提高连接跟踪上限，防止多设备掉线
+echo "CONFIG_KERNEL_NF_CONNTRACK_MAX=163840" >> .config
+
+# 4. 彻底清理冗余的 iptables 核心模块 (可选)
+# 这一步能让固件更纯净
+sed -i 's/CONFIG_PACKAGE_kmod-ipt-physdev=y/# CONFIG_PACKAGE_kmod-ipt-physdev is not set/g' .config
+
