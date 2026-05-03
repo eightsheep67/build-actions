@@ -162,5 +162,3 @@ CONFIG_TARGET_ROOTFS_PARTSIZE=512
 CONFIG_ZSTD_OPTIMIZE_O3=y
 # CONFIG_PACKAGE_kmod-inet-diag is not set
 CONFIG_PACKAGE_tcping=y
-CONFIG_PACKAGE_luci-app-argon-config=y
-CONFIG_PACKAGE_luci-i18n-argon-config-zh-cn=y
