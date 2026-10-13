@@ -137,9 +137,33 @@ jobs:
       continue-on-error: true
       uses: 281677160/common@message
  
-    - name: 启动 Upterm 远程 SSH 调试
+    - name: 启动原生 SSH 调试（支持密码登录）
       if: ${{ github.event.inputs.SSH_ACTION == 'true' }}
-      uses: owenthereal/action-upterm@v1
+      run: |
+        echo "==============================================="
+        echo "正在安装并配置内网穿透与 SSH 服务..."
+        
+        # 1. 设置 root 密码为 123456（你可以自己改）
+        echo "root:123456" | sudo chpasswd
+        sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sudo service ssh restart
+
+        # 2. 安装 cloudflared 建立隧道
+        curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        sudo dpkg -i cloudflared.deb
+        
+        echo "==============================================="
+        echo "【提示】请复制下方的 trycloudflare.com 链接"
+        echo "或者直接使用本地端口转发连接"
+        echo "系统账户: root，密码: 123456"
+        echo "==============================================="
+        
+        cloudflared tunnel --url ssh://localhost:22 &
+        
+        # 挂起 1 小时等待你调试
+        sleep 3600
         
     - name: 编译信息
       continue-on-error: true
