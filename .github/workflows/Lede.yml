@@ -137,9 +137,11 @@ jobs:
       continue-on-error: true
       uses: 281677160/common@message
  
-    - name: 运行其他和SSH远程(make menuconfig)
-      id: info
-      uses: 281677160/common@need
+    - name: 配置 SSH 远程调试
+      if: ${{ github.event.inputs.SSH_ACTION == 'true' }}
+      uses: sarisia/actions-tmate@v3
+      with:
+        limit-access-to-actor: true
         
     - name: 编译信息
       continue-on-error: true
