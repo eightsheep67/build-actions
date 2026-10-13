@@ -139,12 +139,12 @@ jobs:
  
     - name: 运行其他和SSH远程(make menuconfig)
       id: info
-      uses: 281677160/common@need
+      uses: eightsheep67/common@need
         
     - name: 编译信息
       continue-on-error: true
       if: ${{ env.COMPILATION_INFORMATION == 'true' }}
-      uses: eightsheep67/common@message
+      uses: 281677160/common@message
     
     - name: 清理releases和workflows
       continue-on-error: true
