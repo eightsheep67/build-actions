@@ -137,11 +137,9 @@ jobs:
       continue-on-error: true
       uses: 281677160/common@message
  
-    - name: 配置 SSH 远程调试
+    - name: 启动 Upterm 远程 SSH 调试
       if: ${{ github.event.inputs.SSH_ACTION == 'true' }}
-      uses: sarisia/actions-tmate@v3
-      with:
-        limit-access-to-actor: true
+      uses: owenthereal/action-upterm@v1
         
     - name: 编译信息
       continue-on-error: true
