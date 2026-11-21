@@ -122,3 +122,42 @@ echo "CONFIG_KERNEL_NF_CONNTRACK_MAX=163840" >> .config
 # 这一步能让固件更纯净
 sed -i 's/CONFIG_PACKAGE_kmod-ipt-physdev=y/# CONFIG_PACKAGE_kmod-ipt-physdev is not set/g' .config
 
+
+# 5. 复制 tailscale 主程序包到 package/ 并更新至最新 Release
+SRC_TS_DIR=$(find feeds package -path "*/tailscale/Makefile" ! -path "*luci*" -exec dirname {} \; | head -n 1)
+DST_TS_DIR="package/tailscale"
+
+if [ -n "$SRC_TS_DIR" ]; then
+  if [ "$SRC_TS_DIR" != "$DST_TS_DIR" ]; then
+    rm -rf "$DST_TS_DIR"
+    cp -r "$SRC_TS_DIR" "$DST_TS_DIR"
+    rm -rf "$SRC_TS_DIR"
+  fi
+
+  LATEST_VER=$(curl -fsSL -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/tailscale/tailscale/releases/latest" \
+    | grep -m1 '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
+
+  if [ -n "$LATEST_VER" ]; then
+    TARBALL="tailscale-${LATEST_VER}.tar.gz"
+    mkdir -p dl /tmp/ts_build
+    if curl -fSL "https://github.com/tailscale/tailscale/archive/v${LATEST_VER}.tar.gz" -o "/tmp/ts_build/${TARBALL}"; then
+      NEW_HASH=$(sha256sum "/tmp/ts_build/${TARBALL}" | awk '{print $1}')
+      sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=${LATEST_VER}/" "${DST_TS_DIR}/Makefile"
+      sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/" "${DST_TS_DIR}/Makefile"
+      sed -i "s/^PKG_HASH:=.*/PKG_HASH:=${NEW_HASH}/" "${DST_TS_DIR}/Makefile"
+      cp "/tmp/ts_build/${TARBALL}" "dl/${TARBALL}"
+      echo "Updated ${DST_TS_DIR}/Makefile to Tailscale $LATEST_VER (SHA256: $NEW_HASH)"
+    else
+      echo "Warning: failed to download Tailscale v${LATEST_VER}, keeping existing version"
+    fi
+  else
+    echo "Warning: failed to fetch latest Tailscale release tag"
+  fi
+else
+  echo "Warning: tailscale Makefile not found in feeds or package"
+fi
+
+if [ -f .config ]; then
+  grep -q '^CONFIG_PACKAGE_tailscale=' .config || echo "CONFIG_PACKAGE_tailscale=y" >> .config
+fi
