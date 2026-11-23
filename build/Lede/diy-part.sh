@@ -134,6 +134,11 @@ if [ -n "$SRC_TS_DIR" ]; then
     rm -rf "$SRC_TS_DIR"
   fi
 
+  # 移动到 package/tailscale 后，原相对路径 ../../lang/golang/golang-package.mk 会指向根目录导致报错，改为 $(TOPDIR) 绝对引用
+  if [ -f "${DST_TS_DIR}/Makefile" ]; then
+    sed -i 's|\.\./\.\./lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g' "${DST_TS_DIR}/Makefile"
+  fi
+
   LATEST_VER=$(curl -fsSL -H "Accept: application/vnd.github+json" \
     "https://api.github.com/repos/tailscale/tailscale/releases/latest" \
     | grep -m1 '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
@@ -160,4 +165,5 @@ fi
 
 if [ -f .config ]; then
   grep -q '^CONFIG_PACKAGE_tailscale=' .config || echo "CONFIG_PACKAGE_tailscale=y" >> .config
+  make defconfig
 fi
